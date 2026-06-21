@@ -1,181 +1,162 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RE:MAIN_TERMINAL_U.C.</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>Umbrella Mainframe Connection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="scanlines"></div>
-    <div class="glow-overlay"></div>
+    <div class="crt-lines"></div>
 
-    <div id="login-screen" class="screen active">
-        <div class="login-box">
-            <div class="terminal-header">
-                <span class="system-dot" id="secret-trigger" onclick="triggerSecretEntry()"></span> SECURITY PROTOCOL: OVERRIDE_MODE
+    <div id="login-screen" class="auth-container active">
+        <div class="auth-window">
+            <div class="auth-header">
+                <div class="umbrella-logo-small"></div>
+                <span>UMBRELLA CORP. NETWORK LOGIN</span>
             </div>
-            <h2>RESTRICTED AREA</h2>
-            <div class="warning-block">
-                CRITICAL WARNING: THIS TERMINAL IS PROPERTY OF UMBRELLA CORP. 
-                UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED UNDER TREASON DIRECTIVE.
+            <div class="auth-body">
+                <div class="umbrella-big-logo"></div>
+                <h2>SYSTEM AUTHORIZATION</h2>
+                <div class="warning-alert">
+                    RESTRICTED DATA SECURED BY EMBEDDED ENCRYPTION SYSTEMS. UNAUTHORIZED ACCESS ATTEMPT WILL TRIGGER AN IMMEDIATE NETWORK LOCKDOWN AND LOCATION TRACING.
+                </div>
+                <div class="field-group">
+                    <label>AGENT ID</label>
+                    <input type="password" id="username" autocomplete="off">
+                </div>
+                <div class="field-group">
+                    <label>SECURITY CODE</label>
+                    <input type="password" id="password">
+                </div>
+                <button class="action-btn-main" onclick="checkAuth()">INITIALIZE SYSTEM ENTRY</button>
+                <div id="error-msg" class="auth-error"></div>
             </div>
-            
-            <div class="input-group">
-                <label>AGENT ACCESS ID:</label>
-                <input type="password" id="username" autocomplete="off">
-            </div>
-            
-            <div class="input-group">
-                <label>SECURITY CODE:</label>
-                <input type="password" id="password">
-            </div>
-            
-            <button id="login-btn" onclick="checkAuth()">EXECUTE AUTHENTICATION</button>
-            <p id="error-msg" class="error-text"></p>
         </div>
     </div>
 
-    <div id="main-terminal" class="screen">
+    <div id="main-terminal" class="terminal-layout">
         
-        <div class="top-status-bar">
-            <div class="bar-segment">SYS_LOC: NEST_LAB_SRV_17</div>
-            <div class="bar-segment cluster-title" onclick="unlockHiddenDiary()">UMBRELLA MAINFRAME ACCESS</div>
-            <div class="bar-segment text-right" id="terminal-clock">00:00:00</div>
-        </div>
+        <header class="top-nav-bar">
+            <div class="nav-left">
+                <div class="umbrella-logo-small"></div>
+                <span class="system-title">UMBRELLA MAINFRAME // RE:MAIN_CORE</span>
+            </div>
+            <div class="nav-right">
+                <span class="status-tag">STATUS: ONLINE</span>
+                <span class="clock-display" id="terminal-clock">00:00:00</span>
+                <button class="logout-btn" onclick="logout()">DISCONNECT</button>
+            </div>
+        </header>
 
-        <div class="terminal-grid">
+        <main class="workspace-grid">
             
-            <div class="panel side-panel-left">
-                <div class="panel-header">COM-LINK CHANNELS</div>
-                <ul class="com-channels-list">
-                    <li class="channel-item active" id="chan-ada" onclick="switchChannel('ada')">
-                        <div class="channel-info">
-                            <span class="channel-name">ADA WONG</span>
-                            <span class="channel-status offline" id="ada-status">OFFLINE</span>
-                        </div>
-                        <div class="channel-meta">FREQ: 148.05 MHz</div>
-                    </li>
-                    <li class="channel-item" id="chan-hanningan" onclick="switchChannel('hanningan')">
-                        <div class="channel-info">
-                            <span class="channel-name">I. HANNIGAN</span>
-                            <span class="channel-status online">LINKED</span>
-                        </div>
-                        <div class="channel-meta">FREQ: 142.35 MHz</div>
-                    </li>
-                </ul>
+            <nav class="main-tabs-sidebar">
+                <div class="tab-button active" onclick="switchMainTab('comms')">
+                    <svg class="tab-icon" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                    <span>CHANNELS</span>
+                </div>
+                <div class="tab-button" onclick="switchMainTab('missions')">
+                    <svg class="tab-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/></svg>
+                    <span>MISSIONS</span>
+                </div>
+                <div class="tab-button" onclick="switchMainTab('browser')">
+                    <svg class="tab-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    <span>NET_EXPLORER</span>
+                </div>
+            </nav>
 
-                <div class="panel-header section-spacing">SYSTEM CORE</div>
-                <ul class="system-tabs">
-                    <li class="sys-tab-item" onclick="switchTab('missions')">> MISSION FILES</li>
-                    <li class="sys-tab-item" onclick="switchTab('browser')">> INT. BROWSER</li>
-                </ul>
-            </div>
-
-            <div class="panel main-content-panel">
+            <section class="center-content-panel">
                 
-                <div id="tab-chat-ada" class="tab-module active">
-                    <div class="module-header">
-                        <span>COM-LINK // TARGET_ID: WONG_A</span>
-                        <button class="call-btn" onclick="startVoiceCall()">📞 AUDIO CALL</button>
-                    </div>
-                    <div class="chat-messages" id="chat-box-ada">
-                        <div class="msg system">[SYSTEM LOG]: Канал зашифрован. Ожидание вызываемого абонента.</div>
-                    </div>
-                    <div class="chat-input-area">
-                        <div class="input-wrapper">
-                            <span class="prompt-sym">></span>
-                            <input type="text" id="chat-input-ada" onkeypress="handleChatKey(event, 'ada')">
-                        </div>
-                        <button onclick="sendMessage('ada')">TRANSMIT</button>
-                    </div>
-                </div>
+                <div id="view-comms" class="sub-view active">
+                    <div class="comms-layout">
+                        <div class="contacts-sidebar">
+                            <div class="sidebar-title">AVAILABLE FREQUENCIES</div>
+                            
+                            <div class="contact-card active" onclick="selectContact('ada')">
+                                <div class="avatar-wrapper">
+                                    <div class="avatar ava-ada"></div>
+                                    <span class="indicator online" id="status-dot-ada"></span>
+                                </div>
+                                <div class="contact-details">
+                                    <div class="c-name">ADA WONG</div>
+                                    <div class="c-freq">148.05 MHz</div>
+                                </div>
+                            </div>
+                            
+                            <div class="contact-card" onclick="selectContact('hannigan')">
+                                <div class="avatar-wrapper">
+                                    <div class="avatar ava-hannigan"></div>
+                                    <span class="indicator online"></span>
+                                </div>
+                                <div class="contact-details">
+                                    <div class="c-name">I. HANNIGAN</div>
+                                    <div class="c-freq">142.35 MHz</div>
+                                </div>
+                            </div>
 
-                <div id="tab-chat-hanningan" class="tab-module">
-                    <div class="module-header"><span>COM-LINK // HQ_HANNIGAN</span></div>
-                    <div class="chat-messages" id="chat-box-hanningan">
-                        <div class="msg hanningan">Hannigan: Леон, доложите обстановку. Объект под охраной?</div>
-                    </div>
-                    <div class="chat-input-area">
-                        <div class="input-wrapper">
-                            <span class="prompt-sym">></span>
-                            <input type="text" id="chat-input-hanningan" onkeypress="handleChatKey(event, 'hanningan')">
+                            <div class="contact-card" onclick="selectContact('ashley')">
+                                <div class="avatar-wrapper">
+                                    <div class="avatar ava-ashley"></div>
+                                    <span class="indicator offline"></span>
+                                </div>
+                                <div class="contact-details">
+                                    <div class="c-name">ASHLEY GRAHAM</div>
+                                    <div class="c-freq">144.10 MHz</div>
+                                </div>
+                            </div>
                         </div>
-                        <button onclick="sendMessage('hanningan')">TRANSMIT</button>
-                    </div>
-                </div>
 
-                <div id="tab-missions" class="tab-module">
-                    <div class="module-header">CURRENT MISSIONS</div>
-                    <div class="missions-view">
-                        <table class="mission-table">
-                            <thead>
-                                <tr>
-                                    <th>OBJECTIVE</th>
-                                    <th>RANK</th>
-                                    <th>COST (ENG)</th>
-                                    <th>REWARD</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="m-title">OPERATION JAVIER</td>
-                                    <td class="rank-s">RANK S</td>
-                                    <td>80%</td>
-                                    <td>CLASSIFIED DATA</td>
-                                </tr>
-                                <tr>
-                                    <td class="m-title">RESCUE ASHLEY GRAHAM</td>
-                                    <td class="rank-a">RANK A</td>
-                                    <td>45%</td>
-                                    <td>EXPEDITION CODES</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                        <div class="chat-main-window">
+                            <div class="chat-window-header">
+                                <div class="target-title">
+                                    <span id="active-chat-title">ADA WONG</span> 
+                                    <span class="crypto-tag">COM-LINK ENCRYPTED [SECURE]</span>
+                                </div>
+                                <button class="re-call-button" onclick="triggerVoiceCall()">
+                                    <svg viewBox="0 0 24 24"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.65.25-1C8.7 6.45 8.5 5.25 8.5 4.01c0-.55-.45-1-1-1H4.01c-.55 0-1 .45-1 1C3 17.06 13.94 28 27 28c.55 0 1-.45 1-1v-3.49c0-.55-.45-1-1-1z"/></svg>
+                                    AUDIO TRANSMISSION
+                                </button>
+                            </div>
 
-                <div id="tab-browser" class="tab-module">
-                    <div class="module-header">UMBRELLA INTERNAL BROWSER</div>
-                    <div class="browser-container">
-                        <div class="browser-sidebar">
-                            <span onclick="loadBrowserPage('news')">> Raccoon_News_1998</span>
-                            <span onclick="loadBrowserPage('incident')">> Arklay_Incident_Report</span>
-                        </div>
-                        <div class="browser-content" id="browser-page-content">
-                            <p>[Выберите документ для расшифровки в левой панели браузера]</p>
+                            <div class="chat-messages-container" id="chat-scroller">
+                                <div class="system-info">[SYSTEM]: Awaiting satellite network synchronization...</div>
+                            </div>
+
+                            <div class="chat-footer-input">
+                                <span class="input-sym">>></span>
+                                <input type="text" id="main-chat-input" placeholder="Transmit Leon's reply..." onkeypress="catchEnter(event)">
+                                <button class="send-btn" onclick="processMessageSend()">TRANSMIT</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="tab-secret-diary" class="tab-module">
-                    <div class="module-header">🚨 WARNING: UNAUTHORIZED LOG ACCESS // PERSONAL_MEMORIES</div>
-                    <div class="diary-view">
-                        <div id="diary-lock-screen">
-                            <p>ДАННЫЕ ЗАШИФРОВАНЫ АГЕНТОМ КЕННЕДИ. ВВЕДИТЕ ДАТУ КАТАСТРОФЫ (ДДММГГГГ):</p>
-                            <input type="text" id="diary-code-input" placeholder="********">
-                            <button onclick="verifyDiaryCode()">DECRYPT</button>
-                        </div>
-                        <div id="diary-text-content" style="display: none;">
-                            <p class="diary-date">September 29, 1998</p>
-                            <p class="diary-text">«Этот день я никогда не забуду. Раккун-Сити уничтожен. Я выжил, но какой ценой? И Ада... Она использовала меня, предала, бросила умирать. Но каждый раз, когда я закрываю глаза, я вижу её силуэт в красном платье. Кем она была на самом деле? Шпионкой? Или кем-то большим для меня? Если мы встретимся снова... смогу ли я направить на неё оружие?»</p>
+                <div id="view-missions" class="sub-view">
+                    <div class="window-base">
+                        <div class="window-title">📋 ACTIVE MISSIONS & PROTOCOLS</div>
+                        <div class="window-body">
+                            <p>Tactical data stream locked. Ready for configuration in the next implementation phase.</p>
                         </div>
                     </div>
                 </div>
 
-            </div>
+                <div id="view-browser" class="sub-view">
+                    <div class="window-base">
+                        <div class="window-title">🌐 UMBRELLA SECURE EXPLORER v2.4</div>
+                        <div class="window-body">
+                            <p>Internal corporate intranet node offline. Ready for layout asset deployment.</p>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="panel side-panel-right">
-                <div class="panel-header">SYS TELEMETRY</div>
-                <div class="telemetry-box" id="telemetry-stream"></div>
-            </div>
-
-        </div>
+            </section>
+        </main>
     </div>
 
-    <audio id="call-sound" src="https://www.soundjay.com/phone/sounds/telephone-ring-03a.mp3" preload="auto"></audio>
+    <audio id="codec-sound" src="https://assets.mixkit.co/active_storage/sfx/1657/1657-84.wav" preload="auto"></audio>
 
     <script src="script.js"></script>
 </body>
