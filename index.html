@@ -3,84 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Umbrella Corp. Terminal</title>
-    
+    <title>RE:MAIN_TERMINAL_U.C.</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="scanlines"></div>
+    <div class="glow-overlay"></div>
 
     <div id="login-screen" class="screen active">
         <div class="login-box">
             <div class="terminal-header">
-                <span class="blink">🔴</span> UMBRELLA CORP. SECURITY SYSTEM v4.12
+                <span class="system-dot" id="secret-trigger" onclick="triggerSecretEntry()"></span> SECURITY PROTOCOL: OVERRIDE_MODE
             </div>
-            <h2>ACCESS RESTRICTED</h2>
-            <p class="warning-text">WARNING: Unauthorized access will be punished under Umbrella Corporation Security Agreement.</p>
-            
-            <div class="input-group">
-                <label for="username">AGENT ID:</label>
-                <input type="text" id="username" autocomplete="off" placeholder="Leon S. Kennedy">
+            <h2>RESTRICTED AREA</h2>
+            <div class="warning-block">
+                CRITICAL WARNING: THIS TERMINAL IS PROPERTY OF UMBRELLA CORP. 
+                UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED UNDER TREASON DIRECTIVE.
             </div>
             
             <div class="input-group">
-                <label for="password">SECURITY CODE:</label>
-                <input type="password" id="password" placeholder="••••••••••••">
+                <label>AGENT ACCESS ID:</label>
+                <input type="password" id="username" autocomplete="off">
             </div>
             
-            <button id="login-btn" onclick="checkAuth()">INITIALIZE LOG IN</button>
+            <div class="input-group">
+                <label>SECURITY CODE:</label>
+                <input type="password" id="password">
+            </div>
+            
+            <button id="login-btn" onclick="checkAuth()">EXECUTE AUTHENTICATION</button>
             <p id="error-msg" class="error-text"></p>
         </div>
     </div>
 
     <div id="main-terminal" class="screen">
-        <div class="terminal-header-main">
-            <span>SYSTEM STATUS: ONLINE</span>
-            <span>AGENT: LEON S. KENNEDY</span>
-            <span id="terminal-clock">00:00:00</span>
+        
+        <div class="top-status-bar">
+            <div class="bar-segment">SYS_LOC: NEST_LAB_SRV_17</div>
+            <div class="bar-segment cluster-title" onclick="unlockHiddenDiary()">UMBRELLA MAINFRAME ACCESS</div>
+            <div class="bar-segment text-right" id="terminal-clock">00:00:00</div>
         </div>
 
         <div class="terminal-grid">
+            
             <div class="panel side-panel-left">
-                <h3>⚡ AGENT STATUS</h3>
-                <div class="status-indicator">CONDITION: <span class="status-fine">FINE</span></div>
-                <div class="divider"></div>
-                <ul class="terminal-menu">
-                    <li class="menu-item active" onclick="switchTab('chat')">📡 SECURE CHAT [ADA]</li>
-                    <li class="menu-item" onclick="switchTab('diary')">📂 PERSONAL LOGS</li>
-                    <li class="menu-item" onclick="switchTab('minigames')">☣️ UMBRELLA PROTOCOLS</li>
+                <div class="panel-header">COM-LINK CHANNELS</div>
+                <ul class="com-channels-list">
+                    <li class="channel-item active" id="chan-ada" onclick="switchChannel('ada')">
+                        <div class="channel-info">
+                            <span class="channel-name">ADA WONG</span>
+                            <span class="channel-status offline" id="ada-status">OFFLINE</span>
+                        </div>
+                        <div class="channel-meta">FREQ: 148.05 MHz</div>
+                    </li>
+                    <li class="channel-item" id="chan-hanningan" onclick="switchChannel('hanningan')">
+                        <div class="channel-info">
+                            <span class="channel-name">I. HANNIGAN</span>
+                            <span class="channel-status online">LINKED</span>
+                        </div>
+                        <div class="channel-meta">FREQ: 142.35 MHz</div>
+                    </li>
+                </ul>
+
+                <div class="panel-header section-spacing">SYSTEM CORE</div>
+                <ul class="system-tabs">
+                    <li class="sys-tab-item" onclick="switchTab('missions')">> MISSION FILES</li>
+                    <li class="sys-tab-item" onclick="switchTab('browser')">> INT. BROWSER</li>
                 </ul>
             </div>
 
             <div class="panel main-content-panel">
-                <div id="tab-chat" class="tab-content active">
-                    <div class="chat-header">COM-LINK ESTABLISHED: ADA WONG</div>
-                    <div class="chat-messages" id="chat-box">
-                        <div class="msg system">[SYSTEM]: Спутниковый канал зашифрован.</div>
+                
+                <div id="tab-chat-ada" class="tab-module active">
+                    <div class="module-header">
+                        <span>COM-LINK // TARGET_ID: WONG_A</span>
+                        <button class="call-btn" onclick="startVoiceCall()">📞 AUDIO CALL</button>
+                    </div>
+                    <div class="chat-messages" id="chat-box-ada">
+                        <div class="msg system">[SYSTEM LOG]: Канал зашифрован. Ожидание вызываемого абонента.</div>
                     </div>
                     <div class="chat-input-area">
-                        <input type="text" id="chat-input" placeholder="Введите ответ Леона..." onkeypress="handleChatKey(event)">
-                        <button onclick="sendLeonMessage()">SEND</button>
+                        <div class="input-wrapper">
+                            <span class="prompt-sym">></span>
+                            <input type="text" id="chat-input-ada" onkeypress="handleChatKey(event, 'ada')">
+                        </div>
+                        <button onclick="sendMessage('ada')">TRANSMIT</button>
                     </div>
                 </div>
 
-                <div id="tab-diary" class="tab-content">
-                    <div class="diary-header">ЛИЧНЫЙ ДНЕВНИК АГЕНТА</div>
-                    <div class="diary-container">
-                        <p>Здесь Леон сможет вести записи, либо читать твои каноничные пасхалки.</p>
+                <div id="tab-chat-hanningan" class="tab-module">
+                    <div class="module-header"><span>COM-LINK // HQ_HANNIGAN</span></div>
+                    <div class="chat-messages" id="chat-box-hanningan">
+                        <div class="msg hanningan">Hannigan: Леон, доложите обстановку. Объект под охраной?</div>
+                    </div>
+                    <div class="chat-input-area">
+                        <div class="input-wrapper">
+                            <span class="prompt-sym">></span>
+                            <input type="text" id="chat-input-hanningan" onkeypress="handleChatKey(event, 'hanningan')">
+                        </div>
+                        <button onclick="sendMessage('hanningan')">TRANSMIT</button>
                     </div>
                 </div>
 
-                <div id="tab-minigames" class="tab-content">
-                    <div class="minigames-header">СИСТЕМА БЕЗОПАСНОСТИ UMBRELLA</div>
-                    <p>Сюда мы добавим взлом замка или смешивание трав.</p>
+                <div id="tab-missions" class="tab-module">
+                    <div class="module-header">CURRENT MISSIONS</div>
+                    <div class="missions-view">
+                        <table class="mission-table">
+                            <thead>
+                                <tr>
+                                    <th>OBJECTIVE</th>
+                                    <th>RANK</th>
+                                    <th>COST (ENG)</th>
+                                    <th>REWARD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="m-title">OPERATION JAVIER</td>
+                                    <td class="rank-s">RANK S</td>
+                                    <td>80%</td>
+                                    <td>CLASSIFIED DATA</td>
+                                </tr>
+                                <tr>
+                                    <td class="m-title">RESCUE ASHLEY GRAHAM</td>
+                                    <td class="rank-a">RANK A</td>
+                                    <td>45%</td>
+                                    <td>EXPEDITION CODES</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
+                <div id="tab-browser" class="tab-module">
+                    <div class="module-header">UMBRELLA INTERNAL BROWSER</div>
+                    <div class="browser-container">
+                        <div class="browser-sidebar">
+                            <span onclick="loadBrowserPage('news')">> Raccoon_News_1998</span>
+                            <span onclick="loadBrowserPage('incident')">> Arklay_Incident_Report</span>
+                        </div>
+                        <div class="browser-content" id="browser-page-content">
+                            <p>[Выберите документ для расшифровки в левой панели браузера]</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-secret-diary" class="tab-module">
+                    <div class="module-header">🚨 WARNING: UNAUTHORIZED LOG ACCESS // PERSONAL_MEMORIES</div>
+                    <div class="diary-view">
+                        <div id="diary-lock-screen">
+                            <p>ДАННЫЕ ЗАШИФРОВАНЫ АГЕНТОМ КЕННЕДИ. ВВЕДИТЕ ДАТУ КАТАСТРОФЫ (ДДММГГГГ):</p>
+                            <input type="text" id="diary-code-input" placeholder="********">
+                            <button onclick="verifyDiaryCode()">DECRYPT</button>
+                        </div>
+                        <div id="diary-text-content" style="display: none;">
+                            <p class="diary-date">September 29, 1998</p>
+                            <p class="diary-text">«Этот день я никогда не забуду. Раккун-Сити уничтожен. Я выжил, но какой ценой? И Ада... Она использовала меня, предала, бросила умирать. Но каждый раз, когда я закрываю глаза, я вижу её силуэт в красном платье. Кем она была на самом деле? Шпионкой? Или кем-то большим для меня? Если мы встретимся снова... смогу ли я направить на неё оружие?»</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
+
+            <div class="panel side-panel-right">
+                <div class="panel-header">SYS TELEMETRY</div>
+                <div class="telemetry-box" id="telemetry-stream"></div>
+            </div>
+
         </div>
     </div>
+
+    <audio id="call-sound" src="https://www.soundjay.com/phone/sounds/telephone-ring-03a.mp3" preload="auto"></audio>
 
     <script src="script.js"></script>
 </body>
