@@ -1,0 +1,2513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Umbrella Corporation — Secure Terminal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --red: #B30000;
+  --red-bright: #FF0000;
+  --red-dark: #6B0000;
+  --bg: #0a0a0a;
+  --bg2: #0f0f0f;
+  --bg3: #141414;
+  --bg4: #1a1a1a;
+  --border: #2a0000;
+  --border2: #3d0000;
+  --text: #c8c8c8;
+  --text-dim: #666;
+  --text-muted: #444;
+  --green: #00ff41;
+  --amber: #ffb300;
+  --mono: 'Share Tech Mono', monospace;
+  --title: 'Orbitron', sans-serif;
+  --body: 'Rajdhani', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* SCANLINE OVERLAY */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ===========================
+   LOGIN SCREEN
+=========================== */
+#login-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.login-ascii {
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--red);
+  text-align: center;
+  margin-bottom: 32px;
+  white-space: pre;
+  text-shadow: 0 0 10px rgba(179,0,0,0.6);
+}
+
+.login-terminal {
+  width: 100%;
+  max-width: 480px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+}
+
+.login-header {
+  background: var(--red-dark);
+  padding: 8px 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #ff9999;
+  letter-spacing: .1em;
+  display: flex;
+  justify-content: space-between;
+}
+
+.login-body { padding: 28px 24px; }
+
+.login-sys-text {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+  line-height: 1.7;
+}
+
+.login-sys-text span { color: var(--red); }
+
+.field-group { margin-bottom: 16px; }
+
+.field-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--red);
+  letter-spacing: .15em;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.field-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 10px 12px;
+  outline: none;
+  letter-spacing: .05em;
+  transition: border-color .2s;
+}
+
+.field-input:focus { border-color: var(--red); box-shadow: 0 0 8px rgba(179,0,0,0.3); }
+
+.login-btn {
+  width: 100%;
+  background: var(--red-dark);
+  border: 1px solid var(--red);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .2em;
+  padding: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background .2s;
+}
+
+.login-btn:hover { background: var(--red); }
+
+.login-error {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--red-bright);
+  margin-top: 10px;
+  display: none;
+  animation: blink .5s step-end infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+.login-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 20px;
+  line-height: 1.8;
+}
+
+/* ===========================
+   MAIN APP
+=========================== */
+#app { display: none; min-height: 100vh; }
+
+/* TOP BAR */
+.topbar {
+  height: 44px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 16px;
+}
+
+.topbar-logo {
+  font-family: var(--title);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: .15em;
+  white-space: nowrap;
+}
+
+.topbar-logo span { color: var(--text-dim); font-weight: 400; font-size: 10px; }
+
+.topbar-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.topbar-status .dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  margin-right: 5px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.topbar-user {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.topbar-user strong { color: var(--red); }
+
+.logout-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  cursor: pointer;
+  letter-spacing: .1em;
+  transition: all .2s;
+}
+
+.logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* LAYOUT */
+.layout { display: flex; min-height: calc(100vh - 44px); }
+
+/* SIDEBAR */
+.sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 16px 0;
+}
+
+.nav-section {
+  margin-bottom: 20px;
+}
+
+.nav-section-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: .2em;
+  padding: 0 14px;
+  margin-bottom: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all .15s;
+  letter-spacing: .03em;
+}
+
+.nav-item:hover { color: var(--text); background: rgba(179,0,0,0.05); }
+
+.nav-item.active {
+  color: var(--red);
+  border-left-color: var(--red);
+  background: rgba(179,0,0,0.08);
+}
+
+.nav-icon {
+  font-size: 12px;
+  width: 14px;
+  font-family: var(--mono);
+  color: inherit;
+}
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--red-dark);
+  color: var(--red);
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 1px 5px;
+  border: 1px solid var(--red-dark);
+}
+
+/* CONTENT */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* PANELS */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* PAGE HEADER */
+.page-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-title {
+  font-family: var(--title);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: .1em;
+  margin-bottom: 4px;
+}
+
+.page-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: .08em;
+}
+
+/* CARDS / WIDGETS */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 16px;
+}
+
+.card-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: .2em;
+  margin-bottom: 8px;
+}
+
+.card-value {
+  font-family: var(--title);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--red);
+}
+
+.card-unit {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.card-body { margin-top: 8px; }
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.info-row:last-child { border-bottom: none; }
+.info-key { color: var(--text-muted); font-family: var(--mono); font-size: 11px; letter-spacing: .05em; }
+.info-val { color: var(--text); font-weight: 500; }
+.info-val.red { color: var(--red); }
+.info-val.green { color: var(--green); }
+.info-val.amber { color: var(--amber); }
+
+.section-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--red);
+  letter-spacing: .2em;
+  margin: 20px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* PROFILE PANEL */
+.agent-header {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.agent-photo {
+  width: 100px;
+  height: 120px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  text-align: center;
+  letter-spacing: .05em;
+}
+
+.agent-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.agent-info { flex: 1; }
+
+.agent-name {
+  font-family: var(--title);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: .08em;
+  margin-bottom: 4px;
+}
+
+.agent-rank {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: .15em;
+  margin-bottom: 12px;
+}
+
+.clearance-badge {
+  display: inline-block;
+  background: var(--red-dark);
+  border: 1px solid var(--red);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 10px;
+  letter-spacing: .1em;
+}
+
+/* CHAT PANEL */
+.chat-layout { display: flex; height: calc(100vh - 140px); gap: 0; }
+
+.chat-list {
+  width: 220px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  overflow-y: auto;
+}
+
+.chat-list-header {
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: .2em;
+  border-bottom: 1px solid var(--border);
+}
+
+.chat-contact {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .15s;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.chat-contact:hover { background: rgba(179,0,0,0.05); }
+.chat-contact.active { background: rgba(179,0,0,0.1); border-left: 2px solid var(--red); }
+
+.contact-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--red);
+  font-weight: 700;
+}
+
+.contact-name {
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.contact-preview {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.contact-status {
+  font-family: var(--mono);
+  font-size: 9px;
+  margin-top: 2px;
+}
+
+.status-online { color: var(--green); }
+.status-away { color: var(--amber); }
+.status-offline { color: var(--text-muted); }
+
+.chat-window {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-left: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.chat-topbar {
+  padding: 10px 14px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-topbar-name {
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chat-topbar-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.msg {
+  max-width: 70%;
+  padding: 10px 13px;
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.msg-in {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--red);
+  color: var(--text);
+  align-self: flex-start;
+}
+
+.msg-out {
+  background: rgba(107,0,0,0.25);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  align-self: flex-end;
+}
+
+.msg-meta {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.msg-sender {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--red);
+  margin-bottom: 3px;
+  letter-spacing: .05em;
+}
+
+.typing-indicator {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 4px 12px;
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.typing-dots span {
+  display: inline-block;
+  width: 4px; height: 4px;
+  background: var(--red);
+  border-radius: 50%;
+  margin: 0 1px;
+  animation: tdot 1.2s infinite;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: .2s; }
+.typing-dots span:nth-child(3) { animation-delay: .4s; }
+
+@keyframes tdot { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+
+.chat-input-bar {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  gap: 8px;
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  padding: 8px 12px;
+  outline: none;
+  resize: none;
+  height: 38px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.chat-input:focus { border-color: var(--red); }
+
+.chat-send {
+  background: var(--red-dark);
+  border: 1px solid var(--red);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 0 16px;
+  cursor: pointer;
+  letter-spacing: .1em;
+  transition: background .2s;
+}
+
+.chat-send:hover { background: var(--red); }
+
+/* DIARY PANEL */
+.diary-area {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 20px;
+}
+
+.diary-date {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: .1em;
+  margin-bottom: 12px;
+}
+
+.diary-textarea {
+  width: 100%;
+  min-height: 300px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border);
+  padding: 16px 0;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.8;
+  outline: none;
+  resize: vertical;
+  letter-spacing: .02em;
+}
+
+.diary-save {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 7px 18px;
+  cursor: pointer;
+  letter-spacing: .15em;
+  margin-top: 12px;
+  transition: all .2s;
+}
+
+.diary-save:hover { border-color: var(--red); color: var(--red); }
+
+.diary-entries { margin-top: 20px; }
+
+.diary-entry {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+
+.diary-entry:hover { border-color: var(--border2); }
+
+.entry-date {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--red);
+  letter-spacing: .1em;
+  margin-bottom: 5px;
+}
+
+.entry-preview {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* DATABASE PANEL */
+.db-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.db-entry {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 14px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+
+.db-entry:hover { border-color: var(--border2); }
+.db-entry.classified { border-left: 2px solid var(--red); }
+
+.db-entry-code {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--red);
+  letter-spacing: .15em;
+  margin-bottom: 4px;
+}
+
+.db-entry-title {
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.db-entry-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.db-entry-tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 6px;
+  margin-top: 6px;
+  border: 1px solid;
+}
+
+.tag-red { border-color: var(--red); color: var(--red); }
+.tag-amber { border-color: var(--amber); color: var(--amber); }
+.tag-green { border-color: var(--green); color: var(--green); }
+
+/* DB MODAL */
+.db-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+
+.db-modal.open { display: flex; }
+
+.db-modal-box {
+  width: 600px;
+  max-width: 95vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+}
+
+.db-modal-header {
+  padding: 12px 16px;
+  background: var(--red-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.db-modal-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #ff9999;
+  letter-spacing: .1em;
+}
+
+.db-modal-close {
+  background: none;
+  border: none;
+  color: #ff9999;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.db-modal-body { padding: 20px; }
+
+.db-modal-body h3 {
+  font-family: var(--title);
+  font-size: 16px;
+  color: var(--red);
+  margin-bottom: 12px;
+}
+
+.db-modal-body p {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+}
+
+/* ACHIEVEMENTS */
+.ach-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+.ach-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 16px;
+  text-align: center;
+  transition: border-color .2s;
+}
+
+.ach-card.unlocked { border-color: var(--amber); }
+.ach-card.locked { opacity: .45; filter: grayscale(1); }
+
+.ach-icon {
+  font-family: var(--mono);
+  font-size: 24px;
+  color: var(--amber);
+  margin-bottom: 8px;
+}
+
+.ach-name {
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.ach-desc {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* MISSIONS PANEL */
+.mission-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.mission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.mission-title {
+  font-family: var(--body);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.mission-status {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 8px;
+  border: 1px solid;
+}
+
+.ms-active { border-color: var(--green); color: var(--green); }
+.ms-pending { border-color: var(--amber); color: var(--amber); }
+.ms-complete { border-color: var(--text-muted); color: var(--text-muted); }
+
+.mission-desc {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  height: 3px;
+  background: var(--bg3);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--red);
+  transition: width .5s;
+}
+
+.mission-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+/* MINIGAMES PANEL */
+.game-select-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+
+.game-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+
+.game-card:hover { border-color: var(--red); }
+
+.game-title {
+  font-family: var(--title);
+  font-size: 12px;
+  color: var(--red);
+  margin-bottom: 6px;
+  letter-spacing: .08em;
+}
+
+.game-desc {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.game-play-btn {
+  margin-top: 10px;
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.game-play-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* SHOOTING GAME */
+#shoot-game {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 16px;
+  display: none;
+}
+
+#shoot-arena {
+  width: 100%;
+  height: 300px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.target {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--red);
+  border-radius: 50%;
+  cursor: crosshair;
+  transition: transform .05s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.target::before {
+  content: '';
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.shoot-hud {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.shoot-hud span { color: var(--red); font-weight: 700; }
+
+/* CIPHER GAME */
+#cipher-game {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 20px;
+  display: none;
+}
+
+.cipher-display {
+  font-family: var(--mono);
+  font-size: 22px;
+  color: var(--amber);
+  letter-spacing: .3em;
+  text-align: center;
+  padding: 20px;
+  border: 1px solid var(--border2);
+  margin-bottom: 16px;
+  background: var(--bg);
+}
+
+.cipher-hint {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.cipher-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 18px;
+  padding: 10px;
+  text-align: center;
+  letter-spacing: .3em;
+  outline: none;
+}
+
+.cipher-feedback {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: center;
+  margin-top: 10px;
+  min-height: 20px;
+}
+
+/* QTE GAME */
+#qte-game {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 20px;
+  display: none;
+  text-align: center;
+}
+
+.qte-prompt {
+  font-family: var(--title);
+  font-size: 48px;
+  color: var(--red);
+  margin: 20px 0;
+  letter-spacing: .2em;
+  text-shadow: 0 0 20px rgba(179,0,0,.5);
+  animation: qte-pulse .5s infinite;
+}
+
+@keyframes qte-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+.qte-bar {
+  height: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  margin: 16px 0;
+  position: relative;
+}
+
+.qte-fill {
+  height: 100%;
+  background: var(--red);
+  transition: width .1s linear;
+}
+
+.qte-score {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* MAPS */
+.map-container {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 16px;
+}
+
+.map-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.map-tab {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  padding: 8px 14px;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all .15s;
+}
+
+.map-tab.active { color: var(--red); border-bottom-color: var(--red); }
+
+.map-canvas {
+  width: 100%;
+  height: 360px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.map-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(179,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(179,0,0,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.map-label {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: .05em;
+  padding: 3px 6px;
+  background: rgba(10,10,10,.8);
+  border: 1px solid var(--border);
+}
+
+.map-marker {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px rgba(179,0,0,.6);
+}
+
+.map-marker.you {
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(0,255,65,.6);
+  animation: pulse 1.5s infinite;
+}
+
+/* DECRYPT ANIMATION */
+@keyframes decrypt {
+  0% { content: attr(data-enc); }
+  100% { content: attr(data-text); }
+}
+
+.decrypt-text {
+  font-family: var(--mono);
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); }
+::-webkit-scrollbar-thumb:hover { background: var(--red-dark); }
+
+/* NOTIFICATION */
+.notif {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--red);
+  border-left: 3px solid var(--red);
+  padding: 12px 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  max-width: 280px;
+  z-index: 2000;
+  display: none;
+  animation: slideIn .3s ease;
+}
+
+@keyframes slideIn { from { transform: translateX(100%); opacity:0; } to { transform: translateX(0); opacity:1; } }
+
+.notif-title { color: var(--red); font-weight: 700; margin-bottom: 3px; letter-spacing: .1em; }
+
+/* MOBILE */
+@media (max-width: 700px) {
+  .sidebar { width: 48px; }
+  .nav-item span:not(.nav-icon) { display: none; }
+  .nav-section-label { display: none; }
+  .grid-2, .grid-3, .ach-grid, .game-select-grid, .db-grid { grid-template-columns: 1fr; }
+  .chat-list { width: 160px; }
+  .agent-header { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========================
+     LOGIN SCREEN
+========================= -->
+<div id="login-screen">
+  <div class="login-ascii">
+ _   _ __  __ ____  ____  _____ _     _        _
+| | | |  \/  | __ )|  _ \| ____| |   | |      / \
+| | | | |\/| |  _ \| |_) |  _| | |   | |     / _ \
+| |_| | |  | | |_) |  _ <| |___| |___| |___ / ___ \
+ \___/|_|  |_|____/|_| \_\_____|_____|_____/_/   \_\
+
+  C O R P O R A T I O N   |   S E C U R E   T E R M I N A L   v 4 . 7
+  </div>
+
+  <div class="login-terminal">
+    <div class="login-header">
+      <span>UMBRELLA CORP — CLASSIFIED ACCESS</span>
+      <span id="clock">--:--:--</span>
+    </div>
+    <div class="login-body">
+      <div class="login-sys-text">
+        <span>SYSTEM:</span> Umbrella Security Network<br>
+        <span>PROTOCOL:</span> SHA-256 Authentication<br>
+        <span>STATUS:</span> AWAITING CREDENTIALS<br>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">AGENT ID / USERNAME</label>
+        <input class="field-input" id="username" type="text" placeholder="Enter agent ID..." autocomplete="off" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">ACCESS CODE / PASSWORD</label>
+        <input class="field-input" id="password" type="password" placeholder="Enter access code..." autocomplete="off" />
+      </div>
+
+      <button class="login-btn" onclick="attemptLogin()">ACCESS TERMINAL</button>
+      <div class="login-error" id="login-error">ACCESS DENIED — INVALID CREDENTIALS</div>
+
+      <div class="login-status">
+        ENCRYPTION: ACTIVE<br>
+        FAILED ATTEMPTS: <span id="fail-count">0</span><br>
+        LOCATION: CLASSIFIED
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================
+     MAIN APP
+========================= -->
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-logo">UMBRELLA <span>CORP / SECURE NET</span></div>
+    <div class="topbar-status">
+      <span class="dot"></span>
+      <span id="topbar-time">CONNECTED — 00:00:00</span>
+    </div>
+    <div class="topbar-user">LOGGED IN AS: <strong>LEON S. KENNEDY</strong></div>
+    <button class="logout-btn" onclick="confirmLogout()">CLASSIFY + EXIT</button>
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="nav-section">
+        <div class="nav-section-label">OVERVIEW</div>
+        <div class="nav-item active" onclick="showPanel('dashboard', this)">
+          <span class="nav-icon">[H]</span><span>Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="showPanel('profile', this)">
+          <span class="nav-icon">[A]</span><span>Agent Profile</span>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">COMMS</div>
+        <div class="nav-item" onclick="showPanel('chats', this)">
+          <span class="nav-icon">[C]</span><span>Comms</span>
+          <span class="nav-badge" id="msg-badge">1</span>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">FILES</div>
+        <div class="nav-item" onclick="showPanel('diary', this)">
+          <span class="nav-icon">[D]</span><span>Field Diary</span>
+        </div>
+        <div class="nav-item" onclick="showPanel('database', this)">
+          <span class="nav-icon">[B]</span><span>Database</span>
+        </div>
+        <div class="nav-item" onclick="showPanel('maps', this)">
+          <span class="nav-icon">[M]</span><span>Maps</span>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">OPS</div>
+        <div class="nav-item" onclick="showPanel('missions', this)">
+          <span class="nav-icon">[Q]</span><span>Missions</span>
+        </div>
+        <div class="nav-item" onclick="showPanel('achievements', this)">
+          <span class="nav-icon">[*]</span><span>Achievements</span>
+        </div>
+        <div class="nav-item" onclick="showPanel('games', this)">
+          <span class="nav-icon">[G]</span><span>Training Sim</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT AREA -->
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="page-header">
+          <div class="page-title">COMMAND DASHBOARD</div>
+          <div class="page-sub">CLEARANCE: LEVEL 5 — UMBRELLA SECURITY DIVISION</div>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-label">AGENT STATUS</div>
+            <div class="card-value green-text" style="color:var(--green);font-size:16px;font-family:var(--mono);margin-top:4px;">ACTIVE</div>
+            <div class="card-unit">FIELD OPERATIVE</div>
+          </div>
+          <div class="card">
+            <div class="card-label">MISSION SCORE</div>
+            <div class="card-value" id="score-display">0</div>
+            <div class="card-unit">XP ACCUMULATED</div>
+          </div>
+          <div class="card">
+            <div class="card-label">UNREAD COMMS</div>
+            <div class="card-value" id="unread-display">1</div>
+            <div class="card-unit">ENCRYPTED MESSAGES</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <div class="section-title">AGENT BRIEF</div>
+            <div class="card">
+              <div class="card-body">
+                <div class="info-row"><span class="info-key">AGENT</span><span class="info-val">Leon Scott Kennedy</span></div>
+                <div class="info-row"><span class="info-key">CODENAME</span><span class="info-val red">ALPHA-7</span></div>
+                <div class="info-row"><span class="info-key">DIVISION</span><span class="info-val">USSS / Umbrella Counter-Bio</span></div>
+                <div class="info-row"><span class="info-key">CURRENT OP</span><span class="info-val amber">OPERATION: ASHFORD</span></div>
+                <div class="info-row"><span class="info-key">LOCATION</span><span class="info-val">CLASSIFIED — SPAIN</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title">RECENT ACTIVITY</div>
+            <div class="card">
+              <div class="card-body">
+                <div class="info-row"><span class="info-key">22:14</span><span class="info-val">Encrypted comm — A. Wong</span></div>
+                <div class="info-row"><span class="info-key">20:47</span><span class="info-val">Database access — T-Virus</span></div>
+                <div class="info-row"><span class="info-key">19:03</span><span class="info-val">Mission brief updated</span></div>
+                <div class="info-row"><span class="info-key">17:30</span><span class="info-val">Training sim completed</span></div>
+                <div class="info-row"><span class="info-key">15:11</span><span class="info-val">Login — Secure Terminal</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">ACTIVE MISSIONS</div>
+        <div class="mission-card">
+          <div class="mission-header">
+            <div class="mission-title">Rescue Ashley Graham</div>
+            <div class="mission-status ms-active">IN PROGRESS</div>
+          </div>
+          <div class="mission-desc">Locate and extract President Graham's daughter from Los Illuminados compound. Hostile contact confirmed. Use of lethal force authorized.</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:45%"></div></div>
+          <div class="mission-meta"><span>PROGRESS: 45%</span><span>PRIORITY: CRITICAL</span></div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="panel" id="panel-profile">
+        <div class="page-header">
+          <div class="page-title">AGENT DOSSIER</div>
+          <div class="page-sub">FILE: LEON SCOTT KENNEDY — LEVEL 5 CLEARANCE REQUIRED</div>
+        </div>
+
+        <div class="agent-header">
+          <div class="agent-photo">
+            <div style="text-align:center;">
+              <div style="font-size:28px;margin-bottom:4px;">// LEON</div>
+              <div style="font-size:9px;color:var(--text-muted);">PHOTO<br>ON FILE</div>
+            </div>
+          </div>
+          <div class="agent-info">
+            <div class="agent-name">LEON S. KENNEDY</div>
+            <div class="agent-rank">SPECIAL AGENT — USSS / UMBRELLA COUNTER-BIO TERRORISM UNIT</div>
+            <div class="clearance-badge">CLEARANCE: LEVEL 5</div>
+            <div style="margin-top:14px;">
+              <div class="info-row"><span class="info-key">DATE OF BIRTH</span><span class="info-val">29 FEBRUARY 1977</span></div>
+              <div class="info-row"><span class="info-key">HEIGHT</span><span class="info-val">5'11" / 180 cm</span></div>
+              <div class="info-row"><span class="info-key">BLOOD TYPE</span><span class="info-val">O+</span></div>
+              <div class="info-row"><span class="info-key">FORMER UNIT</span><span class="info-val">Raccoon City PD — RPD</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <div class="section-title">COMBAT RECORD</div>
+            <div class="card">
+              <div class="info-row"><span class="info-key">MISSIONS COMPLETED</span><span class="info-val red">47</span></div>
+              <div class="info-row"><span class="info-key">SURVIVAL RATE</span><span class="info-val green">100%</span></div>
+              <div class="info-row"><span class="info-key">KNOWN CONTACTS</span><span class="info-val">Ada Wong, Hunnigan, Krauser</span></div>
+              <div class="info-row"><span class="info-key">BIOHAZARD EXPOSURE</span><span class="info-val amber">RACCOON CITY — 1998</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="section-title">KNOWN ASSOCIATES</div>
+            <div class="card">
+              <div class="info-row"><span class="info-key">ADA WONG</span><span class="info-val red">UNAFFILIATED / WATCH</span></div>
+              <div class="info-row"><span class="info-key">INGRID HUNNIGAN</span><span class="info-val green">SUPPORT OPS</span></div>
+              <div class="info-row"><span class="info-key">ASHLEY GRAHAM</span><span class="info-val amber">EXTRACTION TARGET</span></div>
+              <div class="info-row"><span class="info-key">KRAUSER</span><span class="info-val red">HOSTILE — TERMINATED</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">FIELD NOTES — PSYCHOLOGICAL PROFILE</div>
+        <div class="card">
+          <p style="font-family:var(--mono);font-size:12px;color:var(--text-dim);line-height:1.8;">
+            Kennedy displays exceptional field adaptability and psychological resilience despite repeated biohazard exposure.
+            Primary motivation appears to be protection of civilians. Note: maintains unauthorized contact with subject "Ada Wong"
+            — intelligence affiliation unknown. Emotional detachment inconsistent under field conditions. Recommend continued monitoring.
+          </p>
+        </div>
+      </div>
+
+      <!-- CHATS -->
+      <div class="panel" id="panel-chats">
+        <div class="page-header">
+          <div class="page-title">ENCRYPTED COMMUNICATIONS</div>
+          <div class="page-sub">ALL TRANSMISSIONS MONITORED — UMBRELLA SECURITY PROTOCOL</div>
+        </div>
+
+        <div class="chat-layout">
+          <div class="chat-list">
+            <div class="chat-list-header">CONTACTS — 4</div>
+
+            <div class="chat-contact active" id="contact-ada" onclick="switchChat('ada', this)">
+              <div class="contact-avatar" style="background:#3d0000;color:#ff4444;">A</div>
+              <div>
+                <div class="contact-name">Ada Wong</div>
+                <div class="contact-preview">Don't look for me.</div>
+                <div class="contact-status status-online">ONLINE</div>
+              </div>
+            </div>
+
+            <div class="chat-contact" id="contact-hunnigan" onclick="switchChat('hunnigan', this)">
+              <div class="contact-avatar" style="background:#002222;color:#00ff41;">H</div>
+              <div>
+                <div class="contact-name">Hunnigan</div>
+                <div class="contact-preview">Your extraction ETA—</div>
+                <div class="contact-status status-online">ONLINE</div>
+              </div>
+            </div>
+
+            <div class="chat-contact" id="contact-hq" onclick="switchChat('hq', this)">
+              <div class="contact-avatar" style="background:#1a0000;color:#b30000;border-radius:0;">U</div>
+              <div>
+                <div class="contact-name">Umbrella HQ</div>
+                <div class="contact-preview">DIRECTIVE 7-C issued</div>
+                <div class="contact-status status-away">ENCRYPTED</div>
+              </div>
+            </div>
+
+            <div class="chat-contact" id="contact-usss" onclick="switchChat('usss', this)">
+              <div class="contact-avatar" style="background:#001a00;color:#00ff41;border-radius:0;">US</div>
+              <div>
+                <div class="contact-name">USSS Command</div>
+                <div class="contact-preview">Op status update</div>
+                <div class="contact-status status-away">SECURE LINE</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-window">
+            <div class="chat-topbar">
+              <div id="chat-avatar" class="contact-avatar" style="width:30px;height:30px;font-size:11px;background:#3d0000;color:#ff4444;">A</div>
+              <div>
+                <div class="chat-topbar-name" id="chat-name">Ada Wong</div>
+                <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);" id="chat-encryption">E2E ENCRYPTED</div>
+              </div>
+              <div class="chat-topbar-status" id="chat-status">ONLINE</div>
+            </div>
+
+            <div class="chat-messages" id="chat-messages"></div>
+
+            <div class="typing-indicator" id="typing-indicator">
+              <div class="typing-dots"><span></span><span></span><span></span></div>
+              <span id="typing-name">Ada</span> is typing...
+            </div>
+
+            <div class="chat-input-bar">
+              <input class="chat-input" id="chat-input" type="text" placeholder="Type encrypted message..." onkeydown="handleChatKey(event)" />
+              <button class="chat-send" onclick="sendMessage()">SEND</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIARY -->
+      <div class="panel" id="panel-diary">
+        <div class="page-header">
+          <div class="page-title">FIELD DIARY — CLASSIFIED</div>
+          <div class="page-sub">PERSONAL RECORDS OF AGENT LEON S. KENNEDY</div>
+        </div>
+
+        <div class="diary-area">
+          <div class="diary-date" id="diary-date">ENTRY DATE: --</div>
+          <textarea class="diary-textarea" id="diary-textarea" placeholder="Write your field notes here. These records are encrypted and accessible only to you.
+
+— L.S.K."></textarea>
+          <button class="diary-save" onclick="saveDiaryEntry()">ENCRYPT + SAVE ENTRY</button>
+        </div>
+
+        <div class="section-title">PREVIOUS ENTRIES</div>
+        <div class="diary-entries" id="diary-entries"></div>
+      </div>
+
+      <!-- DATABASE -->
+      <div class="panel" id="panel-database">
+        <div class="page-header">
+          <div class="page-title">UMBRELLA RESEARCH DATABASE</div>
+          <div class="page-sub">CLASSIFICATION: SECRET — AUTHORIZED ACCESS ONLY</div>
+        </div>
+
+        <div class="db-grid">
+          <div class="db-entry classified" onclick="openDBModal('tvirus')">
+            <div class="db-entry-code">FILE-001 / VIRUS RESEARCH</div>
+            <div class="db-entry-title">T-Virus (Tyrant Virus)</div>
+            <div class="db-entry-desc">Mutagenic retrovirus developed by Umbrella Corporation. Primary infection vector for zombification.</div>
+            <span class="db-entry-tag tag-red">CLASSIFIED</span>
+          </div>
+          <div class="db-entry classified" onclick="openDBModal('gvirus')">
+            <div class="db-entry-code">FILE-002 / VIRUS RESEARCH</div>
+            <div class="db-entry-title">G-Virus (Golgotha Virus)</div>
+            <div class="db-entry-desc">William Birkin's prized research. Extreme mutation capability. Raccoon City incident confirmed origin.</div>
+            <span class="db-entry-tag tag-red">CLASSIFIED</span>
+          </div>
+          <div class="db-entry classified" onclick="openDBModal('las-plagas')">
+            <div class="db-entry-code">FILE-003 / PARASITE</div>
+            <div class="db-entry-title">Las Plagas Parasite</div>
+            <div class="db-entry-desc">Parasitic organism indigenous to rural Spain. Transforms host into Ganado — maintains cognitive function.</div>
+            <span class="db-entry-tag tag-amber">ACTIVE THREAT</span>
+          </div>
+          <div class="db-entry" onclick="openDBModal('bow')">
+            <div class="db-entry-code">FILE-004 / BOW CATALOG</div>
+            <div class="db-entry-title">Bio-Organic Weapons</div>
+            <div class="db-entry-desc">Catalog of confirmed Umbrella BOW types: Crimson Head, Licker, Tyrant T-00, Verdugo, El Gigante.</div>
+            <span class="db-entry-tag tag-amber">RESTRICTED</span>
+          </div>
+          <div class="db-entry" onclick="openDBModal('raccoon')">
+            <div class="db-entry-code">FILE-005 / INCIDENT REPORT</div>
+            <div class="db-entry-title">Raccoon City Incident 1998</div>
+            <div class="db-entry-desc">T-Virus outbreak. Population 100,000. Thermobaric missile strike authorized. Zero civilian survivors.</div>
+            <span class="db-entry-tag tag-red">TOP SECRET</span>
+          </div>
+          <div class="db-entry" onclick="openDBModal('kennedy-file')">
+            <div class="db-entry-code">FILE-006 / PERSONNEL</div>
+            <div class="db-entry-title">Subject: Kennedy, L.S.</div>
+            <div class="db-entry-desc">Survivor — Raccoon City. Current asset of US Government. Monitor for unauthorized intelligence sharing.</div>
+            <span class="db-entry-tag tag-green">ACTIVE FILE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAPS -->
+      <div class="panel" id="panel-maps">
+        <div class="page-header">
+          <div class="page-title">TACTICAL MAPS</div>
+          <div class="page-sub">REAL-TIME SATELLITE — CLASSIFIED COORDINATES</div>
+        </div>
+
+        <div class="map-container">
+          <div class="map-tabs">
+            <div class="map-tab active" onclick="switchMap('spain', this)">SPAIN — OP ZONE</div>
+            <div class="map-tab" onclick="switchMap('raccoon', this)">RACCOON CITY</div>
+            <div class="map-tab" onclick="switchMap('hq', this)">UMBRELLA HQ</div>
+          </div>
+
+          <div class="map-canvas" id="map-spain">
+            <div class="map-grid"></div>
+            <div class="map-marker you" style="left:42%;top:55%" title="Leon — current position"></div>
+            <div class="map-marker" style="left:60%;top:40%;background:var(--amber)"></div>
+            <div class="map-marker" style="left:70%;top:30%;background:var(--red)"></div>
+            <div class="map-label" style="left:38%;top:58%">Kennedy — ALPHA-7</div>
+            <div class="map-label" style="left:56%;top:43%">Target: Ashley</div>
+            <div class="map-label" style="left:66%;top:33%">Illuminados Base</div>
+            <div class="map-label" style="left:5%;top:5%;font-size:10px;color:var(--red)">SPAIN — RURAL SECTOR 7</div>
+            <div class="map-label" style="right:5%;bottom:5%;font-size:9px;">CLASSIFIED — DO NOT DISTRIBUTE</div>
+          </div>
+
+          <div class="map-canvas" id="map-raccoon" style="display:none">
+            <div class="map-grid"></div>
+            <div class="map-label" style="left:5%;top:5%;font-size:10px;color:var(--red)">RACCOON CITY — 1998 ARCHIVE</div>
+            <div class="map-label" style="left:20%;top:40%">RPD HQ</div>
+            <div class="map-label" style="left:50%;top:30%">Umbrella Lab</div>
+            <div class="map-label" style="left:40%;top:60%">Sewers</div>
+            <div class="map-label" style="left:65%;top:50%">Birkin's Lab</div>
+            <div class="map-label" style="right:5%;bottom:5%;font-size:9px;color:var(--red)">STATUS: DESTROYED</div>
+          </div>
+
+          <div class="map-canvas" id="map-hq" style="display:none">
+            <div class="map-grid"></div>
+            <div class="map-label" style="left:5%;top:5%;font-size:10px;color:var(--red)">UMBRELLA CORP — MAIN FACILITY</div>
+            <div class="map-label" style="left:35%;top:35%">Research Wing</div>
+            <div class="map-label" style="left:55%;top:55%">Data Center</div>
+            <div class="map-label" style="left:25%;top:60%">Containment B</div>
+            <div class="map-label" style="right:5%;bottom:5%;font-size:9px;color:var(--text-muted)">ACCESS: LEVEL 5+</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MISSIONS -->
+      <div class="panel" id="panel-missions">
+        <div class="page-header">
+          <div class="page-title">MISSION BRIEFINGS</div>
+          <div class="page-sub">ACTIVE OPERATIONS — ALPHA-7 / LEON S. KENNEDY</div>
+        </div>
+
+        <div class="mission-card">
+          <div class="mission-header">
+            <div class="mission-title">Operation: Rescue Ashley Graham</div>
+            <div class="mission-status ms-active">IN PROGRESS</div>
+          </div>
+          <div class="mission-desc">
+            Infiltrate Los Illuminados compound in rural Spain. Locate and extract Ashley Graham — daughter of President Graham.
+            Exercise extreme caution: Ganado hostiles confirmed. Salazar and his twin bodyguards — Verdugo — are primary obstacles.
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:45%"></div></div>
+          <div class="mission-meta"><span>PROGRESS: 45%</span><span>REWARD: +2500 XP</span></div>
+        </div>
+
+        <div class="mission-card">
+          <div class="mission-header">
+            <div class="mission-title">Neutralize Las Plagas Parasite</div>
+            <div class="mission-status ms-pending">PENDING</div>
+          </div>
+          <div class="mission-desc">
+            Acquire sample of Las Plagas parasite organism. Transmit biological data to Hunnigan for analysis. Avoid full host exposure.
+            Local contacts report amber parasites detach after host is decapitated — extreme caution advised.
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:10%"></div></div>
+          <div class="mission-meta"><span>PROGRESS: 10%</span><span>REWARD: +1800 XP</span></div>
+        </div>
+
+        <div class="mission-card">
+          <div class="mission-header">
+            <div class="mission-title">Track Ada Wong — Unauthorized Op</div>
+            <div class="mission-status ms-pending">PENDING</div>
+          </div>
+          <div class="mission-desc">
+            Ada Wong confirmed present in operational area. Organization unknown. Intel suggests she's extracting a Plaga sample
+            for a third party. Approach: cautious. Maintain radio silence regarding contact.
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:5%"></div></div>
+          <div class="mission-meta"><span>PROGRESS: 5%</span><span>REWARD: +3200 XP</span></div>
+        </div>
+
+        <div class="mission-card">
+          <div class="mission-header">
+            <div class="mission-title">Survive Raccoon City — Archive</div>
+            <div class="mission-status ms-complete">COMPLETE</div>
+          </div>
+          <div class="mission-desc">
+            Arrived in Raccoon City for first day on duty. T-Virus outbreak confirmed. Zero police backup. Survived with civilian Claire Redfield.
+            Escaped via train. City destroyed by thermobaric strike. File closed.
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--text-muted)"></div></div>
+          <div class="mission-meta"><span>PROGRESS: 100%</span><span>COMPLETED: SEPT 29, 1998</span></div>
+        </div>
+      </div>
+
+      <!-- ACHIEVEMENTS -->
+      <div class="panel" id="panel-achievements">
+        <div class="page-header">
+          <div class="page-title">ACHIEVEMENTS</div>
+          <div class="page-sub">AGENT RECORD — LEON S. KENNEDY</div>
+        </div>
+
+        <div class="section-title">UNLOCKED</div>
+        <div class="ach-grid" id="ach-grid"></div>
+      </div>
+
+      <!-- GAMES -->
+      <div class="panel" id="panel-games">
+        <div class="page-header">
+          <div class="page-title">TRAINING SIMULATION</div>
+          <div class="page-sub">UMBRELLA VIRTUAL COMBAT SYSTEM v2.1</div>
+        </div>
+
+        <div class="game-select-grid">
+          <div class="game-card">
+            <div class="game-title">SHOOTING RANGE</div>
+            <div class="game-desc">Click targets before they disappear. Score is tracked in your record.</div>
+            <button class="game-play-btn" onclick="startShootGame()">START TRAINING</button>
+          </div>
+          <div class="game-card">
+            <div class="game-title">KRAUSER CIPHER</div>
+            <div class="game-desc">Decode encrypted Illuminados communications. Shift cipher puzzle.</div>
+            <button class="game-play-btn" onclick="startCipherGame()">DECRYPT</button>
+          </div>
+          <div class="game-card">
+            <div class="game-title">QTE SURVIVAL</div>
+            <div class="game-desc">Press the key shown on screen before time runs out. Reflexes tested.</div>
+            <button class="game-play-btn" onclick="startQTEGame()">BEGIN SEQUENCE</button>
+          </div>
+        </div>
+
+        <!-- Shooting Game -->
+        <div id="shoot-game">
+          <div class="shoot-hud">
+            <span>SCORE: <span id="shoot-score">0</span></span>
+            <span>TIME: <span id="shoot-time">30</span>s</span>
+            <span>HITS: <span id="shoot-hits">0</span></span>
+            <span>MISSES: <span id="shoot-misses">0</span></span>
+          </div>
+          <div id="shoot-arena" onclick="shootMiss()"></div>
+          <button class="game-play-btn" style="margin-top:8px;" onclick="endShootGame()">END SESSION</button>
+        </div>
+
+        <!-- Cipher Game -->
+        <div id="cipher-game">
+          <div class="cipher-display" id="cipher-display">???? ????</div>
+          <div class="cipher-hint" id="cipher-hint">Hint: Caesar cipher shift — 3</div>
+          <input class="cipher-input" id="cipher-input" type="text" placeholder="ENTER DECODED TEXT" oninput="checkCipher()" />
+          <div class="cipher-feedback" id="cipher-feedback"></div>
+          <button class="game-play-btn" style="margin-top:12px;" onclick="nextCipher()">NEXT CIPHER</button>
+          <button class="game-play-btn" style="margin-top:12px;" onclick="endCipherGame()">EXIT</button>
+        </div>
+
+        <!-- QTE Game -->
+        <div id="qte-game">
+          <div class="qte-score">SCORE: <span id="qte-score">0</span> | ROUND: <span id="qte-round">1</span>/10</div>
+          <div class="qte-prompt" id="qte-prompt">?</div>
+          <div class="qte-bar"><div class="qte-fill" id="qte-fill" style="width:100%"></div></div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:8px;">Press the key shown. Be fast.</div>
+          <button class="game-play-btn" style="margin-top:16px;" onclick="endQTEGame()">ABORT</button>
+        </div>
+
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /layout -->
+</div><!-- /app -->
+
+<!-- DATABASE MODAL -->
+<div class="db-modal" id="db-modal">
+  <div class="db-modal-box">
+    <div class="db-modal-header">
+      <span class="db-modal-title" id="modal-title">FILE — CLASSIFIED</span>
+      <button class="db-modal-close" onclick="closeDBModal()">X</button>
+    </div>
+    <div class="db-modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">
+  <div class="notif-title" id="notif-title">INCOMING TRANSMISSION</div>
+  <div id="notif-body">New encrypted message received.</div>
+</div>
+
+<script>
+// ===========================
+// CONFIG — REPLACE TOKEN AFTER /revoke IN BOTFATHER
+// ===========================
+const TG_TOKEN = '8615389590:AAH4szqKn1YTNk-f40hIW0L_r8R2MheTcZ0'; // Replace with new token from BotFather
+const TG_CHAT_ID = '5540469693';
+const CORRECT_LOGIN = 'leon s. kennedy';
+const CORRECT_PASS = 'хороший';
+
+// ===========================
+// CLOCK
+// ===========================
+function updateClock() {
+  const now = new Date();
+  const t = now.toTimeString().slice(0,8);
+  const el = document.getElementById('clock');
+  if(el) el.textContent = t;
+  const tb = document.getElementById('topbar-time');
+  if(tb) tb.textContent = 'CONNECTED — ' + t;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===========================
+// LOGIN
+// ===========================
+let failCount = 0;
+
+function attemptLogin() {
+  const user = document.getElementById('username').value.trim().toLowerCase();
+  const pass = document.getElementById('password').value.trim();
+  if(user === CORRECT_LOGIN && pass === CORRECT_PASS) {
+    localStorage.setItem('umb_session', '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+    notifyTelegram('[UMBRELLA TERMINAL]\nAgent logged in: Leon S. Kennedy\nTime: ' + new Date().toLocaleString());
+  } else {
+    failCount++;
+    document.getElementById('fail-count').textContent = failCount;
+    const err = document.getElementById('login-error');
+    err.style.display = 'block';
+    setTimeout(()=>{ err.style.display='none'; }, 2000);
+  }
+}
+
+document.getElementById('username').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('password').focus(); });
+document.getElementById('password').addEventListener('keydown', e => { if(e.key==='Enter') attemptLogin(); });
+
+function confirmLogout() {
+  if(confirm('Classify account and exit terminal?')) {
+    localStorage.removeItem('umb_session');
+    location.reload();
+  }
+}
+
+// Auto-login from saved session
+window.addEventListener('load', () => {
+  if(localStorage.getItem('umb_session')) {
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initApp();
+  }
+});
+
+// ===========================
+// TELEGRAM
+// ===========================
+async function notifyTelegram(msg) {
+  if(!TG_TOKEN || TG_TOKEN.includes('YOUR_NEW_TOKEN')) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ chat_id: TG_CHAT_ID, text: msg, parse_mode: 'HTML' })
+    });
+  } catch(e){}
+}
+
+let tgOffset = 0;
+
+async function pollTelegram() {
+  if(!TG_TOKEN || TG_TOKEN.includes('YOUR_NEW_TOKEN')) return;
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/getUpdates?offset=${tgOffset}&timeout=20`);
+    const data = await r.json();
+    if(data.ok && data.result.length) {
+      for(const u of data.result) {
+        tgOffset = u.update_id + 1;
+        const txt = u.message?.text;
+        if(txt) receiveAdaMessage(txt);
+      }
+    }
+  } catch(e){}
+  setTimeout(pollTelegram, 3000);
+}
+
+function receiveAdaMessage(text) {
+  if(currentChat === 'ada') {
+    appendMessage('ada', 'Ada Wong', text, false);
+  } else {
+    // store and badge
+    pendingAda.push(text);
+    showNotif('NEW COMM — ADA WONG', text.slice(0,50)+(text.length>50?'...':''));
+    document.getElementById('msg-badge').textContent = pendingAda.length;
+    document.getElementById('unread-display').textContent = pendingAda.length;
+  }
+}
+
+let pendingAda = [];
+
+// ===========================
+// PANEL NAVIGATION
+// ===========================
+function showPanel(name, el) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  if(name==='chats') { loadChatMessages(); pollTelegram(); }
+}
+
+// ===========================
+// INIT
+// ===========================
+function initApp() {
+  loadDiaryEntries();
+  loadAchievements();
+  loadScore();
+  const today = new Date().toLocaleDateString('en-GB', {weekday:'long', year:'numeric', month:'long', day:'numeric'}).toUpperCase();
+  document.getElementById('diary-date').textContent = 'ENTRY DATE: ' + today;
+  loadChatMessages();
+  pollTelegram();
+}
+
+// ===========================
+// SCORE
+// ===========================
+function loadScore() {
+  const s = parseInt(localStorage.getItem('umb_score') || '0');
+  document.getElementById('score-display').textContent = s;
+}
+
+function addScore(n) {
+  let s = parseInt(localStorage.getItem('umb_score') || '0');
+  s += n;
+  localStorage.setItem('umb_score', s);
+  document.getElementById('score-display').textContent = s;
+}
+
+// ===========================
+// NOTIFICATIONS
+// ===========================
+function showNotif(title, body) {
+  const el = document.getElementById('notif');
+  document.getElementById('notif-title').textContent = title;
+  document.getElementById('notif-body').textContent = body;
+  el.style.display = 'block';
+  setTimeout(()=>{ el.style.display='none'; }, 4000);
+}
+
+// ===========================
+// CHAT SYSTEM
+// ===========================
+let currentChat = 'ada';
+
+const chatData = {
+  ada: {
+    name: 'Ada Wong',
+    avatar: 'A',
+    avatarStyle: 'background:#3d0000;color:#ff4444;',
+    status: 'ONLINE — ENCRYPTED',
+    messages: [
+      { from: 'in', sender: 'Ada Wong', text: "Leon. Didn't expect you here.", time: '22:14' },
+      { from: 'in', sender: 'Ada Wong', text: "Don't look for me. Focus on the girl.", time: '22:15' },
+    ]
+  },
+  hunnigan: {
+    name: 'Ingrid Hunnigan',
+    avatar: 'H',
+    avatarStyle: 'background:#002222;color:#00ff41;',
+    status: 'ONLINE — SECURE LINE',
+    messages: [
+      { from: 'in', sender: 'Hunnigan', text: "Leon, this is Hunnigan. Do you copy?", time: '19:00' },
+      { from: 'in', sender: 'Hunnigan', text: "Your target — Ashley Graham — is being held somewhere in this area. Watch your back.", time: '19:01' },
+      { from: 'in', sender: 'Hunnigan', text: "Your extraction ETA is 0400. Do not miss it.", time: '20:10' },
+    ]
+  },
+  hq: {
+    name: 'Umbrella HQ',
+    avatar: 'U',
+    avatarStyle: 'background:#1a0000;color:#b30000;border-radius:0;',
+    status: 'ENCRYPTED — MONITORING',
+    messages: [
+      { from: 'in', sender: 'Umbrella HQ', text: "DIRECTIVE 7-C: Agent Kennedy is to cease unauthorized investigation of Umbrella research facilities.", time: '18:00' },
+      { from: 'in', sender: 'Umbrella HQ', text: "Compliance is not optional. This channel is monitored.", time: '18:01' },
+    ]
+  },
+  usss: {
+    name: 'USSS Command',
+    avatar: 'US',
+    avatarStyle: 'background:#001a00;color:#00ff41;border-radius:0;',
+    status: 'SECURE LINE ONLY',
+    messages: [
+      { from: 'in', sender: 'USSS Command', text: "Kennedy. Op status: ACTIVE. Priority remains extraction of Ashley Graham.", time: '17:30' },
+      { from: 'in', sender: 'USSS Command', text: "Lethal force authorized against all hostiles. Do not engage Umbrella forces unless fired upon.", time: '17:31' },
+    ]
+  }
+};
+
+function loadChatMessages() {
+  const msgs = chatData[currentChat].messages;
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = '';
+  msgs.forEach(m => appendMessageDOM(m.from, m.sender, m.text, m.time));
+
+  // Load pending Ada messages
+  if(currentChat === 'ada' && pendingAda.length) {
+    pendingAda.forEach(t => appendMessage('ada', 'Ada Wong', t, false));
+    pendingAda = [];
+    document.getElementById('msg-badge').textContent = '0';
+    document.getElementById('unread-display').textContent = '0';
+  }
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendMessageDOM(dir, sender, text, time) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + dir;
+  const t = time || new Date().toTimeString().slice(0,5);
+  if(dir === 'in') {
+    div.innerHTML = `<div class="msg-sender">${sender.toUpperCase()}</div>${text}<div class="msg-meta">${t} — RECEIVED</div>`;
+  } else {
+    div.innerHTML = `${text}<div class="msg-meta">${t} — SENT</div>`;
+  }
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendMessage(chat, sender, text, isOut) {
+  if(chat === currentChat || isOut) {
+    appendMessageDOM(isOut ? 'out' : 'in', sender, text, null);
+  }
+  chatData[chat].messages.push({ from: isOut ? 'out' : 'in', sender, text, time: new Date().toTimeString().slice(0,5) });
+}
+
+function switchChat(name, el) {
+  currentChat = name;
+  document.querySelectorAll('.chat-contact').forEach(c=>c.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const d = chatData[name];
+  document.getElementById('chat-name').textContent = d.name;
+  document.getElementById('chat-status').textContent = d.status;
+  const av = document.getElementById('chat-avatar');
+  av.textContent = d.avatar;
+  av.style.cssText = 'width:30px;height:30px;font-size:11px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;' + d.avatarStyle;
+  loadChatMessages();
+}
+
+function handleChatKey(e) { if(e.key==='Enter') sendMessage(); }
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+
+  appendMessage(currentChat, 'Leon', text, true);
+
+  if(currentChat === 'ada') {
+    // Forward to Telegram
+    await notifyTelegram('[LEON] ' + text);
+    // Show typing indicator briefly for immersion (Ada may reply via Telegram)
+    const ti = document.getElementById('typing-indicator');
+    ti.style.display = 'flex';
+    setTimeout(()=>{ ti.style.display='none'; }, 3000);
+  } else {
+    // NPC auto-reply
+    npcReply(currentChat, text);
+  }
+
+  addScore(5);
+  unlockAch('comm');
+}
+
+const npcReplies = {
+  hunnigan: [
+    "Copy that, Leon. Stay sharp.",
+    "I'm tracking your position. Extraction is still on schedule.",
+    "Negative on air support — you're on your own down there.",
+    "Leon, be careful. These Ganados aren't like anything we've seen.",
+    "I'll run that through our database. Stand by.",
+  ],
+  hq: [
+    "Message logged. Non-compliance will be noted in your file, Agent Kennedy.",
+    "This channel is for authorized communications only.",
+    "Your activities are being monitored. Proceed with caution.",
+    "Directive acknowledged. No further response from HQ.",
+  ],
+  usss: [
+    "Understood, Kennedy. Keep us posted.",
+    "The President is watching this op closely. Do not fail.",
+    "Confirmed. Backup is not available at this time.",
+    "Extract Ashley first. Everything else is secondary.",
+  ]
+};
+
+function npcReply(chat, userMsg) {
+  const replies = npcReplies[chat];
+  if(!replies) return;
+  setTimeout(() => {
+    const r = replies[Math.floor(Math.random() * replies.length)];
+    appendMessage(chat, chatData[chat].name, r, false);
+  }, 1000 + Math.random() * 1500);
+}
+
+// ===========================
+// DIARY
+// ===========================
+function saveDiaryEntry() {
+  const text = document.getElementById('diary-textarea').value.trim();
+  if(!text) return;
+  const entries = JSON.parse(localStorage.getItem('umb_diary') || '[]');
+  const now = new Date();
+  entries.unshift({ date: now.toISOString(), text });
+  localStorage.setItem('umb_diary', JSON.stringify(entries));
+  document.getElementById('diary-textarea').value = '';
+  loadDiaryEntries();
+  showNotif('DIARY ENCRYPTED', 'Entry saved to secure storage.');
+  addScore(20);
+  unlockAch('diary');
+}
+
+function loadDiaryEntries() {
+  const entries = JSON.parse(localStorage.getItem('umb_diary') || '[]');
+  const container = document.getElementById('diary-entries');
+  container.innerHTML = '';
+  if(!entries.length) {
+    container.innerHTML = '<div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);padding:12px;">No entries. Begin recording your field notes.</div>';
+    return;
+  }
+  entries.forEach((e, i) => {
+    const d = new Date(e.date);
+    const dateStr = d.toLocaleDateString('en-GB',{weekday:'short',year:'numeric',month:'short',day:'numeric'}).toUpperCase() + ' — ' + d.toTimeString().slice(0,5);
+    const div = document.createElement('div');
+    div.className = 'diary-entry';
+    div.innerHTML = `<div class="entry-date">${dateStr}</div><div class="entry-preview">${e.text.slice(0,120)}${e.text.length>120?'...':''}</div>`;
+    div.onclick = () => { document.getElementById('diary-textarea').value = e.text; document.getElementById('diary-textarea').scrollIntoView({behavior:'smooth'}); };
+    container.appendChild(div);
+  });
+}
+
+// ===========================
+// DATABASE MODAL
+// ===========================
+const dbContent = {
+  tvirus: {
+    title: 'T-VIRUS (TYRANT VIRUS) — FILE 001',
+    body: `<h3>T-Virus — Classification: Retrovirus / Mutagenic</h3>
+      <p>The Tyrant Virus is a mutagenic retrovirus developed by Umbrella Corporation researcher James Marcus in the 1970s. It functions by integrating viral RNA into the host's DNA, triggering rapid cellular mutation.</p>
+      <p>PRIMARY EFFECT: Zombification. Destruction of higher brain function. Extreme increase in aggression. Tissue necrosis over time.</p>
+      <p>SECONDARY MUTATIONS: Prolonged exposure can trigger further mutations — Crimson Heads, Lickers, and in rare cases, the Tyrant series BOW.</p>
+      <p>TRANSMISSION: Contact with infected bodily fluids, airborne dispersal. Highly contagious in enclosed environments.</p>
+      <p>RACCOON CITY 1998: Full city contamination. 100,000+ casualties. Resolved via government thermobaric strike.</p>
+      <p>CURRENT STATUS: Virus samples in secure storage. Multiple third-party organizations known to possess samples — including Los Illuminados (modified strain).</p>`
+  },
+  gvirus: {
+    title: 'G-VIRUS (GOLGOTHA VIRUS) — FILE 002',
+    body: `<h3>G-Virus — Classification: Mutagenic Retrovirus / Extreme</h3>
+      <p>The Golgotha Virus was developed by Umbrella chief researcher William Birkin as a superior alternative to the T-Virus. G-Virus grants near-limitless mutagenic potential.</p>
+      <p>PRIMARY EFFECT: G-mutation — sequential transformation through increasingly powerful biological forms. The host retains some intelligence in early stages.</p>
+      <p>NOTABLE CASE: William Birkin self-administered G-Virus after being shot by Umbrella agents attempting to steal his research. Raccoon City sewers — confirmed contact by survivors.</p>
+      <p>G-MUTATION STAGES: Stage 1 — asymmetric growth. Stage 2 — eye proliferation. Stages 3-5 — total loss of original form.</p>
+      <p>WARNING: G-infected organisms attempt to implant embryos in genetically similar hosts. Offspring are unstable — lethality confirmed.</p>`
+  },
+  'las-plagas': {
+    title: 'LAS PLAGAS PARASITE — FILE 003',
+    body: `<h3>Las Plagas — Classification: Ancient Parasitic Organism</h3>
+      <p>Las Plagas is a parasitic organism excavated from the subterranean ruins beneath a rural Spanish village under the control of Los Illuminados cult. Unlike T-Virus, it preserves host intelligence while establishing obedience.</p>
+      <p>INFECTION: Ingestion of Plaga eggs — dormant period of several hours before hatching. Cannot be detected until host transformation is complete.</p>
+      <p>EFFECT: Host becomes Ganado — capable of speech, tool use, coordination. Obedient to the Plaga master (Saddler). Weakness to flash grenades.</p>
+      <p>AMBER STRAIN: Separate subspecies found in castle guards and Salazar household. More aggressive behavior.</p>
+      <p>COUNTERAGENT: UV light exposure weakens Plagas. Decapitation triggers Plaga emergence — exercise extreme caution.</p>
+      <p>CURRENT THREAT: Active infestation — Spain, operational area. KENNEDY authorized to neutralize all infected personnel.</p>`
+  },
+  bow: {
+    title: 'BIO-ORGANIC WEAPONS CATALOG — FILE 004',
+    body: `<h3>Confirmed BOW Types — Umbrella / Field Encounter</h3>
+      <p><strong>ZOMBIE (T-Virus)</strong> — Standard infection. Slow, persistent. Headshot recommended. Note: Crimson Head evolution after approximately 24h — burn corpses.</p>
+      <p><strong>LICKER (T-Virus, advanced)</strong> — Blind. Sensitive to sound. Exposed brain — primary target. Extreme speed and agility.</p>
+      <p><strong>TYRANT / T-00</strong> — Umbrella BOW. Resistant to conventional arms. Explosive-grade ordnance required. Encountered in Raccoon City by Kennedy.</p>
+      <p><strong>VERDUGO (Las Plagas)</strong> — Salazar's bodyguard. Exoskeleton resistant to most ammunition. Liquid nitrogen immobilizes temporarily.</p>
+      <p><strong>EL GIGANTE (Las Plagas)</strong> — Gigantism induced by Plaga. Chainsaw weak point after stagger. Kennedy — 2 confirmed kills, Spain.</p>
+      <p><strong>REGENERADOR</strong> — Experimental. Regenerates tissue in real time. IR-scope reveals internal Plagas — required for kill.</p>`
+  },
+  raccoon: {
+    title: 'RACCOON CITY INCIDENT REPORT — FILE 005',
+    body: `<h3>Raccoon City — September 1998 — Classified Report</h3>
+      <p>T-Virus contamination of Raccoon City municipal water supply detected September 22, 1998. Source: Umbrella underground laboratory — industrial waste overflow.</p>
+      <p>OUTBREAK TIMELINE: Day 1 — 12 confirmed zombie sightings. Day 3 — city quarantined by Umbrella security. Day 5 — full collapse of civil order. RPD overwhelmed.</p>
+      <p>SURVIVORS: Confirmed — Leon S. Kennedy (RPD officer, first day), Claire Redfield (civilian), Sherry Birkin (civilian, Plaga exposure — recovered), Ada Wong (unknown org).</p>
+      <p>RESOLUTION: September 29, 1998. US Government authorized thermobaric missile strike on Raccoon City. Estimated 100,000 civilian casualties. City destroyed.</p>
+      <p>COVERUP STATUS: Umbrella Corporation publicly denied responsibility. Criminal charges pending. Stock price — collapse. Umbrella dissolution began 2003.</p>
+      <p>NOTE: Kennedy, L.S. — sole law enforcement survivor. Recruited by US Government immediately post-incident. Current status: active field agent, counter-bioterrorism.</p>`
+  },
+  'kennedy-file': {
+    title: 'SUBJECT FILE: KENNEDY, L.S. — FILE 006',
+    body: `<h3>Leon Scott Kennedy — Active Intelligence File</h3>
+      <p>DOB: February 29, 1977. Blood type: O+. Status: Active US Government Special Agent — Counter-Bioterrorism Division.</p>
+      <p>RACCOON CITY: First day as RPD officer. Survived T-Virus outbreak alongside Claire Redfield. Extracted William Birkin's daughter — Sherry Birkin — from G-infected facility.</p>
+      <p>RECRUITMENT: Immediately following Raccoon City. Recruited by classified US government division. Specialized training — biohazard response, close-quarters combat, resistance to psychological manipulation.</p>
+      <p>ADA WONG CONNECTION: Subject maintains emotional attachment to operative known as Ada Wong. Organization of Wong — unknown. Potential security risk. Recommend caution when assigning Kennedy ops that intersect Wong's known interests.</p>
+      <p>CURRENT ASSIGNMENT: Spain. Extraction of Ashley Graham. Unauthorized contact with Ada Wong confirmed during current op — monitoring active.</p>
+      <p>PSYCHOLOGICAL NOTE: Kennedy displays high empathy combined with extreme operational effectiveness. Unlikely to accept losses. May deviate from orders to preserve civilian lives.</p>`
+  }
+};
+
+function openDBModal(key) {
+  const c = dbContent[key];
+  if(!c) return;
+  document.getElementById('modal-title').textContent = c.title;
+  document.getElementById('modal-body').innerHTML = c.body;
+  document.getElementById('db-modal').classList.add('open');
+  addScore(10);
+  unlockAch('research');
+}
+
+function closeDBModal() {
+  document.getElementById('db-modal').classList.remove('open');
+}
+
+// ===========================
+// ACHIEVEMENTS
+// ===========================
+const ALL_ACH = [
+  { id: 'login', icon: '[*]', name: 'First Login', desc: 'Access the terminal for the first time.' },
+  { id: 'comm', icon: '[C]', name: 'Radio Active', desc: 'Send your first encrypted message.' },
+  { id: 'diary', icon: '[D]', name: 'Field Notes', desc: 'Write your first diary entry.' },
+  { id: 'research', icon: '[B]', name: 'Researcher', desc: 'Open a classified database file.' },
+  { id: 'marksman', icon: '[G]', name: 'Marksman', desc: 'Score 5+ hits in the shooting range.' },
+  { id: 'cipher', icon: '[K]', name: 'Krauser\'s Cipher', desc: 'Solve the cipher puzzle.' },
+  { id: 'qte', icon: '[Q]', name: 'Survivor', desc: 'Complete a QTE sequence.' },
+];
+
+function unlockAch(id) {
+  const achs = JSON.parse(localStorage.getItem('umb_achs') || '[]');
+  if(!achs.includes(id)) {
+    achs.push(id);
+    localStorage.setItem('umb_achs', JSON.stringify(achs));
+    const a = ALL_ACH.find(x=>x.id===id);
+    if(a) showNotif('ACHIEVEMENT UNLOCKED', a.name + ' — ' + a.desc);
+    loadAchievements();
+    addScore(50);
+  }
+}
+
+function loadAchievements() {
+  const achs = JSON.parse(localStorage.getItem('umb_achs') || '[]');
+  const grid = document.getElementById('ach-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  ALL_ACH.forEach(a => {
+    const unlocked = achs.includes(a.id);
+    const div = document.createElement('div');
+    div.className = 'ach-card ' + (unlocked ? 'unlocked' : 'locked');
+    div.innerHTML = `<div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div>`;
+    grid.appendChild(div);
+  });
+}
+
+// Auto-unlock login achievement
+setTimeout(()=>unlockAch('login'), 500);
+
+// ===========================
+// MAPS
+// ===========================
+function switchMap(name, el) {
+  document.querySelectorAll('.map-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('map-spain').style.display='none';
+  document.getElementById('map-raccoon').style.display='none';
+  document.getElementById('map-hq').style.display='none';
+  document.getElementById('map-'+name).style.display='block';
+}
+
+// ===========================
+// MINIGAME — SHOOTING RANGE
+// ===========================
+let shootScore=0, shootHits=0, shootMisses=0, shootInterval, shootTimer, shootTimeLeft=30;
+
+function startShootGame() {
+  shootScore=0; shootHits=0; shootMisses=0; shootTimeLeft=30;
+  document.getElementById('shoot-score').textContent='0';
+  document.getElementById('shoot-hits').textContent='0';
+  document.getElementById('shoot-misses').textContent='0';
+  document.getElementById('shoot-time').textContent='30';
+  document.getElementById('shoot-game').style.display='block';
+  document.getElementById('cipher-game').style.display='none';
+  document.getElementById('qte-game').style.display='none';
+
+  spawnTarget();
+  shootInterval = setInterval(spawnTarget, 1200);
+  shootTimer = setInterval(() => {
+    shootTimeLeft--;
+    document.getElementById('shoot-time').textContent = shootTimeLeft;
+    if(shootTimeLeft <= 0) endShootGame();
+  }, 1000);
+}
+
+function spawnTarget() {
+  const arena = document.getElementById('shoot-arena');
+  const existing = arena.querySelectorAll('.target');
+  if(existing.length >= 4) return;
+  const t = document.createElement('div');
+  t.className='target';
+  t.style.left = (5 + Math.random()*85) + '%';
+  t.style.top = (5 + Math.random()*85) + '%';
+  t.onclick = (e) => { e.stopPropagation(); hitTarget(t); };
+  arena.appendChild(t);
+  setTimeout(()=>{ if(t.parentNode){ t.remove(); } }, 1500);
+}
+
+function hitTarget(el) {
+  el.remove();
+  shootHits++;
+  shootScore += 100;
+  document.getElementById('shoot-score').textContent=shootScore;
+  document.getElementById('shoot-hits').textContent=shootHits;
+  if(shootHits >= 5) unlockAch('marksman');
+}
+
+function shootMiss() {
+  shootMisses++;
+  document.getElementById('shoot-misses').textContent=shootMisses;
+}
+
+function endShootGame() {
+  clearInterval(shootInterval);
+  clearInterval(shootTimer);
+  addScore(shootScore);
+  document.getElementById('shoot-game').style.display='none';
+  showNotif('TRAINING COMPLETE', 'Score: '+shootScore+' | Hits: '+shootHits);
+}
+
+// ===========================
+// MINIGAME — CIPHER
+// ===========================
+const ciphers = [
+  { enc: 'SODOB', answer: 'PLAGAS', shift: 3 },
+  { enc: 'OHYLZ', answer: 'VIRUS', shift: 7 },
+  { enc: 'NZKNL', answer: 'KNIFE', shift: 5 },
+  { enc: 'XDTWEV', answer: 'SADLER', shift: 19 },
+  { enc: 'NBYYLZ', answer: 'KRAUSER', shift: 4 },
+];
+
+let currentCipher = 0;
+
+function startCipherGame() {
+  currentCipher = 0;
+  document.getElementById('cipher-game').style.display='block';
+  document.getElementById('shoot-game').style.display='none';
+  document.getElementById('qte-game').style.display='none';
+  loadCipher();
+}
+
+function loadCipher() {
+  const c = ciphers[currentCipher];
+  document.getElementById('cipher-display').textContent = c.enc;
+  document.getElementById('cipher-hint').textContent = 'Hint: Caesar cipher — shift back by ' + c.shift;
+  document.getElementById('cipher-input').value='';
+  document.getElementById('cipher-feedback').textContent='';
+  document.getElementById('cipher-feedback').style.color=';';
+}
+
+function checkCipher() {
+  const val = document.getElementById('cipher-input').value.trim().toUpperCase();
+  const c = ciphers[currentCipher];
+  const fb = document.getElementById('cipher-feedback');
+  if(val === c.answer) {
+    fb.textContent = 'DECRYPTED: ' + c.answer + ' — CORRECT';
+    fb.style.color='var(--green)';
+    addScore(150);
+    unlockAch('cipher');
+    setTimeout(nextCipher, 1200);
+  } else if(val.length === c.answer.length) {
+    fb.textContent = 'INCORRECT. TRY AGAIN.';
+    fb.style.color='var(--red)';
+  }
+}
+
+function nextCipher() {
+  currentCipher = (currentCipher + 1) % ciphers.length;
+  loadCipher();
+}
+
+function endCipherGame() {
+  document.getElementById('cipher-game').style.display='none';
+}
+
+// ===========================
+// MINIGAME — QTE
+// ===========================
+const QTE_KEYS = ['A','S','D','F','J','K','L','E','R','T'];
+let qteScore=0, qteRound=0, qteTimer, qteWidth=100, qteKey='', qteActive=false;
+
+function startQTEGame() {
+  qteScore=0; qteRound=0; qteActive=true;
+  document.getElementById('qte-game').style.display='block';
+  document.getElementById('shoot-game').style.display='none';
+  document.getElementById('cipher-game').style.display='none';
+  nextQTE();
+  document.addEventListener('keydown', handleQTEKey);
+}
+
+function nextQTE() {
+  if(qteRound >= 10) { endQTEGame(); return; }
+  qteRound++;
+  qteWidth=100;
+  qteKey = QTE_KEYS[Math.floor(Math.random()*QTE_KEYS.length)];
+  document.getElementById('qte-prompt').textContent = qteKey;
+  document.getElementById('qte-round').textContent = qteRound;
+  document.getElementById('qte-score').textContent = qteScore;
+  clearInterval(qteTimer);
+  const speed = Math.max(25, 80 - qteRound*5);
+  qteTimer = setInterval(()=>{
+    qteWidth -= 1;
+    document.getElementById('qte-fill').style.width = qteWidth+'%';
+    if(qteWidth<=0){ clearInterval(qteTimer); setTimeout(nextQTE, 500); }
+  }, speed);
+}
+
+function handleQTEKey(e) {
+  if(!qteActive) return;
+  if(e.key.toUpperCase() === qteKey) {
+    clearInterval(qteTimer);
+    qteScore++;
+    document.getElementById('qte-score').textContent=qteScore;
+    document.getElementById('qte-fill').style.width='100%';
+    document.getElementById('qte-fill').style.background='var(--green)';
+    setTimeout(()=>{
+      document.getElementById('qte-fill').style.background='var(--red)';
+      nextQTE();
+    }, 300);
+  }
+}
+
+function endQTEGame() {
+  qteActive=false;
+  document.removeEventListener('keydown', handleQTEKey);
+  clearInterval(qteTimer);
+  document.getElementById('qte-game').style.display='none';
+  if(qteScore>0) unlockAch('qte');
+  addScore(qteScore * 80);
+  showNotif('QTE COMPLETE', 'Survived: '+qteScore+'/'+qteRound+' sequences');
+}
+
+// Close modal on outside click
+document.getElementById('db-modal').addEventListener('click', function(e) {
+  if(e.target === this) closeDBModal();
+});
+</script>
+</body>
+</html>
