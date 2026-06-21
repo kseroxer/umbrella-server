@@ -6,165 +6,8 @@
     <title>Umbrella Corp. Terminal</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-
-    <style>
-        body {
-            background-color: #000000;
-            color: #ff0000;
-            font-family: 'Share Tech Mono', monospace;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* Эффект старого ЭЛТ-монитора */
-        .scanlines {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 4px, 6px 100%;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        /* Экраны */
-        .screen {
-            display: none;
-            width: 100%;
-            height: 100%;
-            justify-content: center;
-            align-items: center;
-            position: absolute;
-        }
-
-        .screen.active {
-            display: flex;
-        }
-
-        /* Окно авторизации */
-        .login-box {
-            background: rgba(15, 0, 0, 0.85);
-            border: 2px solid #ff0000;
-            padding: 30px;
-            width: 450px;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
-            z-index: 5;
-            text-align: center;
-        }
-
-        .terminal-header {
-            font-size: 12px;
-            border-bottom: 1px solid #ff0000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            text-align: left;
-            color: #8b0000;
-        }
-
-        h2 {
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 2px;
-            margin: 10px 0;
-            text-shadow: 0 0 8px #ff0000;
-        }
-
-        .warning-text {
-            font-size: 13px;
-            color: #ff3333;
-            margin-bottom: 25px;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            letter-spacing: 1px;
-        }
-
-        .input-group input {
-            width: 100%;
-            background: #120000;
-            border: 1px solid #ff0000;
-            padding: 10px;
-            color: #ff0000;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
-        }
-
-        button {
-            width: 100%;
-            background: #ff0000;
-            color: #000000;
-            border: none;
-            padding: 12px;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 1px;
-        }
-
-        button:hover {
-            background: #000000;
-            color: #ff0000;
-            border: 1px solid #ff0000;
-            box-shadow: 0 0 15px #ff0000;
-        }
-
-        .error-text {
-            color: #ffffff;
-            background: #8b0000;
-            margin-top: 15px;
-            font-size: 14px;
-            transition: all 0.3s text-shadow;
-        }
-
-        .blink {
-            animation: blinker 1s linear infinite;
-        }
-
-        @keyframes blinker {
-            50% { opacity: 0; }
-        }
-
-        /* Стили для главного экрана после входа */
-        #main-terminal {
-            flex-direction: column;
-            justify-content: flex-start;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .terminal-header-main {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 2px solid #ff0000;
-            padding-bottom: 10px;
-            font-family: 'Orbitron', sans-serif;
-        }
-        
-        .terminal-content {
-            margin-top: 50px;
-            text-align: center;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -195,45 +38,50 @@
 
     <div id="main-terminal" class="screen">
         <div class="terminal-header-main">
-            <span>WELCOME, AGENT KENNEDY</span>
+            <span>SYSTEM STATUS: ONLINE</span>
+            <span>AGENT: LEON S. KENNEDY</span>
             <span id="terminal-clock">00:00:00</span>
         </div>
-        <div class="terminal-content">
-            <h1>ACCESS GRANTED</h1>
-            <p>Загрузка секретных файлов... Мы строим этот интерфейс прямо сейчас.</p>
+
+        <div class="terminal-grid">
+            <div class="panel side-panel-left">
+                <h3>⚡ AGENT STATUS</h3>
+                <div class="status-indicator">CONDITION: <span class="status-fine">FINE</span></div>
+                <div class="divider"></div>
+                <ul class="terminal-menu">
+                    <li class="menu-item active" onclick="switchTab('chat')">📡 SECURE CHAT [ADA]</li>
+                    <li class="menu-item" onclick="switchTab('diary')">📂 PERSONAL LOGS</li>
+                    <li class="menu-item" onclick="switchTab('minigames')">☣️ UMBRELLA PROTOCOLS</li>
+                </ul>
+            </div>
+
+            <div class="panel main-content-panel">
+                <div id="tab-chat" class="tab-content active">
+                    <div class="chat-header">COM-LINK ESTABLISHED: ADA WONG</div>
+                    <div class="chat-messages" id="chat-box">
+                        <div class="msg system">[SYSTEM]: Спутниковый канал зашифрован.</div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Введите ответ Леона..." onkeypress="handleChatKey(event)">
+                        <button onclick="sendLeonMessage()">SEND</button>
+                    </div>
+                </div>
+
+                <div id="tab-diary" class="tab-content">
+                    <div class="diary-header">ЛИЧНЫЙ ДНЕВНИК АГЕНТА</div>
+                    <div class="diary-container">
+                        <p>Здесь Леон сможет вести записи, либо читать твои каноничные пасхалки.</p>
+                    </div>
+                </div>
+
+                <div id="tab-minigames" class="tab-content">
+                    <div class="minigames-header">СИСТЕМА БЕЗОПАСНОСТИ UMBRELLA</div>
+                    <p>Сюда мы добавим взлом замка или смешивание трав.</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
-        // Проверяем строго каноничные данные
-        const CORRECT_USER = "Leon S. Kennedy";
-        const CORRECT_PASS = "RaccoonCity1998";
-
-        function checkAuth() {
-            const userInput = document.getElementById("username").value.trim();
-            const passInput = document.getElementById("password").value.trim();
-            const errorMsg = document.getElementById("error-msg");
-
-            if (userInput === CORRECT_USER && passInput === CORRECT_PASS) {
-                // Переключаем экраны: прячем логин, показываем хаб
-                document.getElementById("login-screen").classList.remove("active");
-                document.getElementById("main-terminal").classList.add("active");
-                startClock();
-            } else {
-                // Ошибка при неверном вводе
-                errorMsg.innerText = "ERROR: INVALID AGENT ID OR SECURITY CODE. ACCESS DENIED.";
-                errorMsg.style.padding = "8px";
-            }
-        }
-
-        // Запуск часов Амбреллы
-        function startClock() {
-            setInterval(() => {
-                const now = new Date();
-                const timeString = now.toTimeString().split(' ')[0];
-                document.getElementById("terminal-clock").innerText = timeString;
-            }, 1000);
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
