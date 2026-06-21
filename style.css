@@ -1,1 +1,273 @@
+/* Базовые стили терминала */
+body {
+    background-color: #000000;
+    color: #ff0000;
+    font-family: 'Share Tech Mono', monospace;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+}
 
+/* Эффект ретро ЭЛТ-монитора */
+.scanlines {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 0, 0, 0), rgba(255, 0, 0, 0.04));
+    background-size: 100% 4px, 6px 100%;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Экраны */
+.screen {
+    display: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    position: absolute;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* Стили Окна Авторизации */
+#login-screen {
+    justify-content: center;
+    align-items: center;
+}
+
+.login-box {
+    background: rgba(10, 0, 0, 0.9);
+    border: 2px solid #ff0000;
+    padding: 30px;
+    width: 450px;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+    text-align: center;
+}
+
+.terminal-header {
+    font-size: 12px;
+    border-bottom: 1px solid #ff0000;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    text-align: left;
+    color: #8b0000;
+}
+
+h2 {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px #ff0000;
+}
+
+.warning-text {
+    font-size: 13px;
+    color: #ff3333;
+    margin-bottom: 25px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.input-group input {
+    width: 100%;
+    background: #0f0000;
+    border: 1px solid #ff0000;
+    padding: 10px;
+    color: #ff0000;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.input-group input:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+}
+
+button {
+    background: #ff0000;
+    color: #000000;
+    border: none;
+    padding: 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+button:hover {
+    background: #000000;
+    color: #ff0000;
+    border: 1px solid #ff0000;
+    box-shadow: 0 0 15px #ff0000;
+}
+
+.error-text {
+    color: #ffffff;
+    background: #8b0000;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.blink { animation: blinker 1s linear infinite; }
+@keyframes blinker { 50% { opacity: 0; } }
+
+/* СТИЛИ ДЛЯ ГЛАВНОГО ИНТЕРФЕЙСА (ХАБА) */
+#main-terminal {
+    flex-direction: column;
+    padding: 20px;
+}
+
+.terminal-header-main {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid #ff0000;
+    padding-bottom: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+/* Сетка (Интерфейс из референсов) */
+.terminal-grid {
+    display: flex;
+    flex: 1;
+    margin-top: 20px;
+    gap: 20px;
+    height: calc(100vh - 80px);
+}
+
+.panel {
+    background: rgba(12, 0, 0, 0.7);
+    border: 1px solid #ff0000;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.2);
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.side-panel-left {
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Статус агента */
+.side-panel-left h3 {
+    font-family: 'Orbitron', sans-serif;
+    margin-top: 0;
+    font-size: 16px;
+    text-align: center;
+}
+
+.status-indicator {
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+    margin: 10px 0;
+}
+
+.status-fine {
+    color: #00ff00;
+    text-shadow: 0 0 8px #00ff00;
+}
+
+.divider {
+    height: 1px;
+    background: #ff0000;
+    margin: 15px 0;
+}
+
+/* Меню */
+.terminal-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu-item {
+    padding: 12px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+}
+
+.menu-item:hover, .menu-item.active {
+    background: rgba(255, 0, 0, 0.15);
+    border: 1px solid #ff0000;
+    text-shadow: 0 0 5px #ff0000;
+}
+
+/* Вкладки контента */
+.tab-content {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tab-content.active {
+    display: flex;
+}
+
+/* Стили интерактива чата */
+.chat-header, .diary-header, .minigames-header {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    border-bottom: 1px solid #ff0000;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+.chat-messages {
+    flex: 1;
+    border: 1px solid #550000;
+    background: rgba(0,0,0,0.5);
+    padding: 15px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    font-size: 15px;
+}
+
+.msg {
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.msg.system { color: #888888; }
+.msg.ada { color: #ff3333; text-shadow: 0 0 3px #ff0000; }
+.msg.leon { color: #00ccff; text-shadow: 0 0 3px #00a2ff; }
+
+.chat-input-area {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    background: #0a0000;
+    border: 1px solid #ff0000;
+    padding: 12px;
+    color: #ff0000;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+}
+
+.chat-input-area input:focus { outline: none; box-shadow: 0 0 5px #ff0000; }
